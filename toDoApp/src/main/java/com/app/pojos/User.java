@@ -34,7 +34,7 @@ public class User {
 	@Column(name = "password", nullable = false)
 	@NotBlank(message = "password cannot be blank")
 	@Size(min = 8, max = 30, message = "Password must be of length greater than  8 and less than 30")
-	@Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,20}$", message = "Password must contain at least one letter, one number, and one special character")
+	//@Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,20}$", message = "Password must contain at least one letter, one number, and one special character")
 	private String password;
 
 	@Column(name = "email", nullable = false, unique = true)
