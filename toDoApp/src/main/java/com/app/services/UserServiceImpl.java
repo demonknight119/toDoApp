@@ -25,6 +25,13 @@ public class UserServiceImpl implements UserService {
 	private UserRepository userRepo;
 	public UserIdDTO addUser(UserDTO userDTO) {
 		// TODO Auto-generated method stub
+		if(userDTO.getRole().toUpperCase().equals(Role.ADMIN.toString())) {
+			Long adminCount = userRepo.countByRole(Role.ADMIN);
+			if(adminCount > 0) {
+				System.out.println("unAuthorized Role creation ");
+				return null;
+			}
+		}
 		User user = modelMapper.map(userDTO, User.class);
 		user.setRole(Role.valueOf(userDTO.getRole().toUpperCase()));
 		userRepo.save(user);
