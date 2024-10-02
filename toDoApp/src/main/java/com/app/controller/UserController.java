@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.app.dto.UserDTO;
 import com.app.dto.UserIdDTO;
+import com.app.exceptions.ForbiddenRequestException;
 import com.app.pojos.Role;
 import com.app.pojos.User;
 import com.app.services.UserServiceImpl;
@@ -27,16 +29,9 @@ public class UserController {
 
 	@PostMapping("/signUp")
 	public ResponseEntity<?> createUser(@RequestBody UserDTO userDTO) {
-		try {
 			System.out.println("UserDTO Details :" + userDTO);
 			UserIdDTO user = userService.addUser(userDTO);
 			return ResponseEntity.status(HttpStatus.ACCEPTED).body(user);
-
-		} catch (Exception e) {
-			// TODO: handle exception
-			System.out.println(e.getMessage());
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-		}
 	}
 
 	@GetMapping("/allUsers")
@@ -47,7 +42,13 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.OK).body(users);
 		} else {
 			
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only Admins can Access this feature");
+			throw new ForbiddenRequestException("Only Admin can access this feature");
 		}
+	}
+	
+	@DeleteMapping("/deleteUser")
+	public ResponseEntity<?> deleteUser(HttpSession session){
+		String statement = userService.deleteUser(session);
+		return ResponseEntity.status(HttpStatus.OK).body(statement);
 	}
 }

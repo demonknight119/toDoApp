@@ -1,6 +1,7 @@
 package com.app.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,9 +12,14 @@ import com.app.dao.UserRepository;
 import com.app.dto.LoginRequestDTO;
 import com.app.dto.UserDTO;
 import com.app.dto.UserIdDTO;
+import com.app.exceptions.BadRequestException;
+import com.app.exceptions.DuplicateEmailException;
+import com.app.exceptions.ForbiddenRequestException;
+import com.app.exceptions.UnauthorizedAccessException;
 import com.app.pojos.Role;
 import com.app.pojos.User;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 @Service
 @Transactional
@@ -29,15 +35,26 @@ public class UserServiceImpl implements UserService {
 			Long adminCount = userRepo.countByRole(Role.ADMIN);
 			if(adminCount > 0) {
 				System.out.println("unAuthorized Role creation ");
-				return null;
+				throw new UnauthorizedAccessException("UnAuthorized role creation");
 			}
 		}
-		User user = modelMapper.map(userDTO, User.class);
-		user.setRole(Role.valueOf(userDTO.getRole().toUpperCase()));
-		userRepo.save(user);
-		UserIdDTO userIdDTO = modelMapper.map(user, UserIdDTO.class);
-		System.out.println("UserIdDTO from UserServiceImpl"+userIdDTO);
-		return userIdDTO;
+		try {
+			User user = modelMapper.map(userDTO, User.class);
+			user.setRole(Role.valueOf(userDTO.getRole().toUpperCase()));
+			userRepo.save(user);
+			UserIdDTO userIdDTO = modelMapper.map(user, UserIdDTO.class);
+			System.out.println("UserIdDTO from UserServiceImpl"+userIdDTO);
+			return userIdDTO;
+		} catch (DataIntegrityViolationException ex) {
+			// TODO Auto-generated catch block
+			ex.printStackTrace();
+			throw new DuplicateEmailException("Email already exists");
+		}
+		catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			throw new RuntimeException("An unexpected error occurred");
+		}
 	}
 	public List<User> getAllUsers() {
 		// TODO Auto-generated method stub
@@ -50,7 +67,19 @@ public class UserServiceImpl implements UserService {
 		if(user!=null && user.getPassword().equals(loginRequest.getPassword()) && loginRequest.getRole().equals(user.getRole().toString().toUpperCase())) {
 			return user;
 		}
-		return null;
+		throw new UnauthorizedAccessException("Please verify your credentials");
+	}
+	public String deleteUser(HttpSession session) {
+		// TODO Auto-generated method stub
+		User user = (User) session.getAttribute("currentUser");
+		if(user == null) {
+			throw new BadRequestException("you must login  first");
+		}
+		else if(user.getRole().toString().equals("ADMIN")) {
+			throw new ForbiddenRequestException("Admin  cant delete themselves");
+		}
+		userRepo.deleteById(user.getId());
+		return "User Deleted";
 	}
 
 }

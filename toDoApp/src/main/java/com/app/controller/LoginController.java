@@ -12,29 +12,24 @@ import com.app.dto.LoginRequestDTO;
 import com.app.pojos.User;
 import com.app.services.UserServiceImpl;
 
-
 import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/toDoApp")
 public class LoginController {
-	
+
 	@Autowired
 	UserServiceImpl userService;
-	
+
 	@PostMapping("login")
-	public ResponseEntity<?>login(@RequestBody LoginRequestDTO loginRequest ,HttpSession session ){
-		System.out.println("loginRequest :"+loginRequest);
-		
+	public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequest, HttpSession session) {
+		System.out.println("loginRequest :" + loginRequest);
+
 		loginRequest.setRole(loginRequest.getRole().toUpperCase());
-		User currentUser = userService.authenticate(loginRequest);  
-		if(currentUser!=null) {
-			currentUser.setPassword(null);
-			session.setAttribute("currentUser", currentUser);
-			return ResponseEntity.status(HttpStatus.OK).body("Logged in Sucessfully");
-		}
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login  failed");
+		User currentUser = userService.authenticate(loginRequest);
+		currentUser.setPassword(null);
+		session.setAttribute("currentUser", currentUser);
+		return ResponseEntity.status(HttpStatus.OK).body("Logged in Sucessfully");
 	}
 
-	
 }
